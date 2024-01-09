@@ -1,5 +1,6 @@
 import pandas as pd
 import math
+import random
 
 
 def read_pickle(filepath):
@@ -13,7 +14,17 @@ def reduce_graph(edgeTuple, factor):
     numOfEdges = count_edges(edgeTuple)
     print(numOfEdges)
 
-    numOfDeletes = math.floor(factor * numOfEdges)
+    for key in edgeTuple:
+        numOfDeletes = math.floor(factor * len(edgeTuple[key]))
+        edgeList = edgeTuple[key]
+
+        while numOfDeletes > 0:
+            deletedElement = edgeList.pop(random.randint(0, len(edgeList) - 1))
+            print(deletedElement)
+
+            # TODO remove inverted element :: if...
+
+            numOfDeletes -= 1
 
     print(numOfDeletes)
 
