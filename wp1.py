@@ -10,23 +10,37 @@ def read_pickle(filepath):
     return listOfEdges
 
 
-def reduce_graph(edgeTuple, factor):
+def reduce_graph(edgeTuple, factor, special=False):
+    print("original: ", edgeTuple)
     numOfEdges = count_edges(edgeTuple)
-    print(numOfEdges)
+    print("number of all edges: ", numOfEdges)
 
     for key in edgeTuple:
-        numOfDeletes = math.floor(factor * len(edgeTuple[key]))
+        print(key + " set:")
+
         edgeList = edgeTuple[key]
 
-        while numOfDeletes > 0:
-            deletedElement = edgeList.pop(random.randint(0, len(edgeList) - 1))
-            print(deletedElement)
+        if special and key == "unidirect":
+            edgeList.clear()
 
-            # TODO remove inverted element :: if...
+        else:
+            numOfDeletes = math.floor(factor * len(edgeTuple[key]))
 
-            numOfDeletes -= 1
+            while numOfDeletes > 0:
+                deletedElement = edgeList.pop(random.randint(0, len(edgeList) - 1))
+                print(deletedElement)
+                numOfDeletes -= 1
 
-    print(numOfDeletes)
+                symmetricTuple = (deletedElement[1], deletedElement[0])
+
+                if symmetricTuple in edgeList:
+                    print("symmetric deleted: ", end="")
+                    print(symmetricTuple)
+                    edgeList.remove(symmetricTuple)
+                    numOfDeletes -= 1
+
+    print("number of all edges: ", count_edges(edgeTuple))
+    print("reduced: ", edgeTuple)
 
 
 # count list of list of edges
@@ -36,8 +50,6 @@ def count_edges(edgeTuple):
     for key in edgeTuple:
         count += len(edgeTuple[key])
 
-        print(len(edgeTuple[key]))
-
     return count
 
 
@@ -46,17 +58,17 @@ if __name__ == "__main__":
 
     print("bidirect: ", end="")
     edgeTuple["bidirect"] = read_pickle(
-        "graph-prak-GFH/n10/D0.3_L0.3_H0.9/D0.3_L0.3_H0.9_n10_12/biRelations.pkl"
+        "graph-prak-GFH/n25/D0.5_L0.5_H0.25/D0.5_L0.5_H0.25_n25_14/biRelations.pkl"
     )
 
     print("unidirect: ", end="")
     edgeTuple["unidirect"] = read_pickle(
-        "graph-prak-GFH/n10/D0.3_L0.3_H0.9/D0.3_L0.3_H0.9_n10_12/uniRelations.pkl"
+        "graph-prak-GFH/n25/D0.5_L0.5_H0.25/D0.5_L0.5_H0.25_n25_14/uniRelations.pkl"
     )
 
     print("empty: ", end="")
     edgeTuple["empty"] = read_pickle(
-        "graph-prak-GFH/n10/D0.3_L0.3_H0.9/D0.3_L0.3_H0.9_n10_12/emptyRelations.pkl"
+        "graph-prak-GFH/n25/D0.5_L0.5_H0.25/D0.5_L0.5_H0.25_n25_14/emptyRelations.pkl"
     )
 
-    reduce_graph(edgeTuple, 0.5)
+    reduce_graph(edgeTuple, 0.5, True)
