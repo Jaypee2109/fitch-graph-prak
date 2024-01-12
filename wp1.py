@@ -186,13 +186,32 @@ if __name__ == "__main__":
     # task 4
     partial_dicograph = reduce_dicograph(random_dicograph, 0.9)
 
+    # generate weights for partial relations
+    weights_graph = create_weights(nodeset_graph, partial_graph, 100)
+    weights_dicograph = create_weights(nodeset_dicograph, partial_dicograph, 100)
+
     # task 5
+    # """
     fitch_cotree_graph_012 = algorithm_one(partial_graph, nodeset_graph, (0, 1, 2))
     fitch_cotree_dicograph_012 = algorithm_one(
         partial_dicograph, nodeset_dicograph, (0, 1, 2)
     )
+    # """
 
-    print(create_weights(nodeset_dicograph, partial_dicograph, 100))
+    fitch_relations_graph_greedy = algorithm_two(
+        nodeset_graph,
+        weights_graph["uni_weighted"],
+        weights_graph["bi_weighted"],
+        weights_graph["empty_weighted"],
+    )
+    fitch_relations_dicograph__greedy = algorithm_two(
+        nodeset_dicograph,
+        weights_dicograph["uni_weighted"],
+        weights_dicograph["bi_weighted"],
+        weights_dicograph["empty_weighted"],
+    )
 
-    fitch_relations_graph_greedy = algorithm_two
-    fitch_relations_dicograph__greedy = algorithm_two
+    print("Completed E*              - ", fitch_cotree_graph_012)
+    print("Completed E*              - ", fitch_cotree_dicograph_012)
+    print("Greedy Completed E*       - ", fitch_relations_graph_greedy)
+    print("Greedy Completed E*       - ", fitch_relations_dicograph__greedy)
