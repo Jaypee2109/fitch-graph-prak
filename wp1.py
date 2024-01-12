@@ -89,11 +89,12 @@ def generate_di_cograph(nodes):
         print(f"Node {node}: {data}")
 
     decoded_dicotree = cotree_to_rel(dicotree)
+    print(decoded_cotree)
     dicograph = rel_to_fitch(decoded_dicotree, nodes)
 
     labels = {node: data["symbol"] for node, data in dicotree.nodes(data=True)}
-    pos = nx.nx_agraph.graphviz_layout(dicotree, prog="dot")
 
+    """"
     for edge in list(dicotree.edges):
         node1, node2 = edge
         label1 = dicotree.nodes[node1].get("label", None)
@@ -104,7 +105,13 @@ def generate_di_cograph(nodes):
             # Contract the edge
             graph = nx.contracted_edge(graph, edge)
 
+    """
+
     nx.draw(dicotree, pos, with_labels=True, labels=labels)
+    # Lea
+    # pos = nx.nx_agraph.graphviz_layout(dicotree, prog="dot")
+    # nx.draw(dicotree, with_labels=True, labels=labels)
+
     plt.show()
 
     return dicograph
@@ -128,7 +135,11 @@ if __name__ == "__main__":
         "graph-prak-GFH/n25/D0.5_L0.5_H0.25/D0.5_L0.5_H0.25_n25_14/emptyRelations.pkl"
     )
 
+    # task 2 & 2b
     # reduce_graph(edgeTuple, 0.5, True)
 
+    # task 3
     nodes = [i for i in range(5)]
-    generate_di_cograph(nodes)
+    random_dicograph = generate_di_cograph(nodes)
+
+    print(random_dicograph.edges)
