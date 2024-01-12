@@ -15,17 +15,28 @@ def read_pickle(filepath):
     return listOfEdges
 
 
+def reduce_dicograph(dicograph, factor, special=False):
+    edgeTuple = graph_to_rel(dicograph)
+    print("VORHER----------------------------", edgeTuple)
+
+    reduce_graph(edgeTuple, factor, special)
+
+    print("NACHHER-------------------------", edgeTuple)
+
+    return edgeTuple
+
+
 def reduce_graph(edgeTuple, factor, special=False):
     print("original: ", edgeTuple)
     numOfEdges = count_edges(edgeTuple)
     print("number of all edges: ", numOfEdges)
 
     for key in edgeTuple:
-        print(key + " set:")
+        print(key, " set:")
 
         edgeList = edgeTuple[key]
 
-        if special and key == "unidirect":
+        if special and key == "d":
             edgeList.clear()
 
         else:
@@ -46,6 +57,8 @@ def reduce_graph(edgeTuple, factor, special=False):
 
     print("number of all edges: ", count_edges(edgeTuple))
     print("reduced: ", edgeTuple)
+
+    return edgeTuple
 
 
 # count list of list of edges
@@ -84,12 +97,7 @@ def generate_di_cograph(nodes):
 
         nodeId += 1
 
-    print("Graph Nodes:")
-    for node, data in dicotree.nodes(data=True):
-        print(f"Node {node}: {data}")
-
     decoded_dicotree = cotree_to_rel(dicotree)
-    print(decoded_cotree)
     dicograph = rel_to_fitch(decoded_dicotree, nodes)
 
     labels = {node: data["symbol"] for node, data in dicotree.nodes(data=True)}
@@ -108,9 +116,9 @@ def generate_di_cograph(nodes):
     """
 
     # Lea
-    nx.draw(dicotree, with_labels=True, labels=labels)
-    # pos = nx.nx_agraph.graphviz_layout(dicotree, prog="dot")
-    # nx.draw(dicotree, pos, with_labels=True, labels=labels)
+    # nx.draw(dicotree, with_labels=True, labels=labels)
+    pos = nx.nx_agraph.graphviz_layout(dicotree, prog="dot")
+    nx.draw(dicotree, pos, with_labels=True, labels=labels)
 
     plt.show()
 
@@ -118,28 +126,29 @@ def generate_di_cograph(nodes):
 
 
 if __name__ == "__main__":
-    edgeTuple = {"bidirect": [], "unidirect": [], "empty": []}
+    edgeTuple = {1: [], "d": [], 0: []}
 
     # print("bidirect: ", end="")
-    edgeTuple["bidirect"] = read_pickle(
+    edgeTuple[1] = read_pickle(
         "graph-prak-GFH/n25/D0.5_L0.5_H0.25/D0.5_L0.5_H0.25_n25_14/biRelations.pkl"
     )
 
     # print("unidirect: ", end="")
-    edgeTuple["unidirect"] = read_pickle(
+    edgeTuple["d"] = read_pickle(
         "graph-prak-GFH/n25/D0.5_L0.5_H0.25/D0.5_L0.5_H0.25_n25_14/uniRelations.pkl"
     )
 
     # print("empty: ", end="")
-    edgeTuple["empty"] = read_pickle(
+    edgeTuple[0] = read_pickle(
         "graph-prak-GFH/n25/D0.5_L0.5_H0.25/D0.5_L0.5_H0.25_n25_14/emptyRelations.pkl"
     )
 
     # task 2 & 2b
-    # reduce_graph(edgeTuple, 0.5, True)
+    # reduce_graph(edgeTuple, 0.5, False)
 
     # task 3
     nodes = [i for i in range(5)]
     random_dicograph = generate_di_cograph(nodes)
 
-    print(random_dicograph.edges)
+    # task 4
+    reduce_dicograph(random_dicograph, 0.5)
