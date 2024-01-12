@@ -107,10 +107,10 @@ def generate_di_cograph(nodes):
 
     """
 
-    nx.draw(dicotree, pos, with_labels=True, labels=labels)
     # Lea
+    nx.draw(dicotree, with_labels=True, labels=labels)
     # pos = nx.nx_agraph.graphviz_layout(dicotree, prog="dot")
-    # nx.draw(dicotree, with_labels=True, labels=labels)
+    # nx.draw(dicotree, pos, with_labels=True, labels=labels)
 
     plt.show()
 
