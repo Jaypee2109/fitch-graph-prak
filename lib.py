@@ -127,7 +127,10 @@ def cotree_to_rel(cotree):
     clusters = {}
     node_attributes = nx.get_node_attributes(ct, "symbol")
 
-    for n in ct.nodes(data=True):
+    nodelist = list(ct.nodes(data=True))
+    nodelist = sorted(nodelist, reverse=True)
+
+    for n in nodelist:
         if not isinstance(n[1]["symbol"], int):
             successors = nx.bfs_tree(ct, n[0])
             clusters[n[0]] = {"direct_leaves": [],
