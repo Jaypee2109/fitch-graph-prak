@@ -4,6 +4,7 @@ import networkx as nx
 import statistics
 from helper_functions import *
 
+
 def graph_to_rel(graph: nx.DiGraph):
     nodes = list(graph.nodes())
 
@@ -32,6 +33,7 @@ def graph_to_rel(graph: nx.DiGraph):
 
     return relations
 
+
 def rel_to_fitch(relations: dict, nodes):
     # Init graph and nodes.
     graph = nx.DiGraph()
@@ -42,6 +44,7 @@ def rel_to_fitch(relations: dict, nodes):
     graph.add_edges_from(relations["d"])
 
     return graph
+
 
 def check_fitch_graph(graph: nx.DiGraph):
     nodes = graph.nodes
@@ -56,54 +59,95 @@ def check_fitch_graph(graph: nx.DiGraph):
                 edges = nx.induced_subgraph(graph, [x, y, z]).edges()
 
                 # F1
-                if (x, y) in edges and (y, x) not in edges \
-                        and (x, z) not in edges and (z, x) not in edges \
-                        and (y, z) not in edges and (z, y) not in edges:
+                if (
+                    (x, y) in edges
+                    and (y, x) not in edges
+                    and (x, z) not in edges
+                    and (z, x) not in edges
+                    and (y, z) not in edges
+                    and (z, y) not in edges
+                ):
                     return False
 
                 # F2
-                elif (x, y) not in edges and (y, x) in edges and\
-                        (x, z) in edges and (z, x) not in edges \
-                        and (y, z) not in edges and (z, y) in edges:
+                elif (
+                    (x, y) not in edges
+                    and (y, x) in edges
+                    and (x, z) in edges
+                    and (z, x) not in edges
+                    and (y, z) not in edges
+                    and (z, y) in edges
+                ):
                     return False
 
                 # F3
-                elif (x, y) not in edges and (y, x) in edges \
-                        and (x, z) not in edges and (z, x) not in edges \
-                        and (y, z) not in edges and (z, y) in edges:
+                elif (
+                    (x, y) not in edges
+                    and (y, x) in edges
+                    and (x, z) not in edges
+                    and (z, x) not in edges
+                    and (y, z) not in edges
+                    and (z, y) in edges
+                ):
                     return False
 
                 # F4
-                elif (x, y) not in edges and (y, x) in edges \
-                        and (x, z) in edges and (z, x) in edges \
-                        and (y, z) not in edges and (z, y) in edges:
+                elif (
+                    (x, y) not in edges
+                    and (y, x) in edges
+                    and (x, z) in edges
+                    and (z, x) in edges
+                    and (y, z) not in edges
+                    and (z, y) in edges
+                ):
                     return False
 
                 # F5
-                elif (x, y) in edges and (y, x) in edges \
-                        and (x, z) not in edges and (z, x) not in edges \
-                        and (y, z) not in edges and (z, y) not in edges:
+                elif (
+                    (x, y) in edges
+                    and (y, x) in edges
+                    and (x, z) not in edges
+                    and (z, x) not in edges
+                    and (y, z) not in edges
+                    and (z, y) not in edges
+                ):
                     return False
 
                 # F6
-                elif (x, y) in edges and (y, x) in edges \
-                        and (x, z) not in edges and (z, x) not in edges \
-                        and (y, z) not in edges and (z, y) in edges:
+                elif (
+                    (x, y) in edges
+                    and (y, x) in edges
+                    and (x, z) not in edges
+                    and (z, x) not in edges
+                    and (y, z) not in edges
+                    and (z, y) in edges
+                ):
                     return False
 
                 # F7
-                elif (x, y) in edges and (y, x) in edges \
-                        and (x, z) not in edges and (z, x) not in edges \
-                        and (y, z) in edges and (z, y) not in edges:
+                elif (
+                    (x, y) in edges
+                    and (y, x) in edges
+                    and (x, z) not in edges
+                    and (z, x) not in edges
+                    and (y, z) in edges
+                    and (z, y) not in edges
+                ):
                     return False
 
                 # F8
-                elif (x, y) in edges and (y, x) not in edges \
-                        and (x, z) in edges and (z, x) in edges \
-                        and (y, z) not in edges and (z, y) in edges:
+                elif (
+                    (x, y) in edges
+                    and (y, x) not in edges
+                    and (x, z) in edges
+                    and (z, x) in edges
+                    and (y, z) not in edges
+                    and (z, y) in edges
+                ):
                     return False
 
     return True
+
 
 def cotree_to_rel(cotree):
     #
@@ -133,10 +177,17 @@ def cotree_to_rel(cotree):
     for n in nodelist:
         if not isinstance(n[1]["symbol"], int):
             successors = nx.bfs_tree(ct, n[0])
-            clusters[n[0]] = {"direct_leaves": [],
-                              "leaves": [], "clustertype": n[1]["symbol"],
-                              'successor_clusters': [node for node in ct[n[0]] if
-                                                     node_attributes[node] in ['u', 'b', 'e']], "order": []}
+            clusters[n[0]] = {
+                "direct_leaves": [],
+                "leaves": [],
+                "clustertype": n[1]["symbol"],
+                "successor_clusters": [
+                    node
+                    for node in ct[n[0]]
+                    if node_attributes[node] in ["u", "b", "e"]
+                ],
+                "order": [],
+            }
             for s in successors:
                 if node_attributes[s] in ["u", "b", "e"]:
                     continue
@@ -145,10 +196,10 @@ def cotree_to_rel(cotree):
         else:
             clusters[list(ct.predecessors(n[0]))[0]]["direct_leaves"] += [n[0]]
 
-    completed_graph = {0:[], 1:[], "d":[]}
+    completed_graph = {0: [], 1: [], "d": []}
     count_uni_edges = 0
 
-    queue = [k for k in clusters if clusters[k]['successor_clusters'] == []]
+    queue = [k for k in clusters if clusters[k]["successor_clusters"] == []]
     while len(queue) != 0:
         q = queue.pop(0)
 
@@ -170,7 +221,7 @@ def cotree_to_rel(cotree):
             elif clusters[q]["clustertype"] == "u":
                 for c0 in range(len(clusters[q]["leaves"])):
                     x = clusters[q]["leaves"][c0]
-                    for c1 in range(c0+1, len(clusters[q]["leaves"])):
+                    for c1 in range(c0 + 1, len(clusters[q]["leaves"])):
                         y = clusters[q]["leaves"][c1]
                         count_uni_edges += 1
                         completed_graph["d"] += [(x, y)]
@@ -211,7 +262,7 @@ def cotree_to_rel(cotree):
             elif clusters[q]["clustertype"] == "u":
                 for c0 in range(len(clusters[q]["order"])):
                     cluster_0 = clusters[q]["order"][c0]
-                    for c1 in range(c0+1, len(clusters[q]["order"])):
+                    for c1 in range(c0 + 1, len(clusters[q]["order"])):
                         cluster_1 = clusters[q]["order"][c1]
                         for x in cluster_0:
                             for y in cluster_1:
@@ -219,14 +270,18 @@ def cotree_to_rel(cotree):
                                 completed_graph["d"] += [(x, y)]
 
         if len(clusters) != 1:
-            insert_cluster = [cl for cl in clusters.keys() if q in clusters[cl]["successor_clusters"]][0]
+            insert_cluster = [
+                cl for cl in clusters.keys() if q in clusters[cl]["successor_clusters"]
+            ][0]
             clusters[insert_cluster]["order"] += [(q, clusters[q]["leaves"])]
-            clusters[insert_cluster]["successor_clusters"].pop(clusters[insert_cluster]["successor_clusters"].index(q))
+            clusters[insert_cluster]["successor_clusters"].pop(
+                clusters[insert_cluster]["successor_clusters"].index(q)
+            )
 
         clusters.pop(q)
 
         if len(queue) == 0:
-            queue = [k for k in clusters if clusters[k]['successor_clusters'] == []]
+            queue = [k for k in clusters if clusters[k]["successor_clusters"] == []]
 
     remapped_graph = {0: [], 1: [], "d": []}
 
@@ -237,6 +292,7 @@ def cotree_to_rel(cotree):
     completed_graph = remapped_graph
 
     return completed_graph
+
 
 def generate_weights(relation, distribution, parameters, symmetric=True):
     weighted_relation = {}
@@ -252,26 +308,48 @@ def generate_weights(relation, distribution, parameters, symmetric=True):
             weighted_relation[(r[1], r[0])] = weight
         return weighted_relation
 
+
 def sym_diff(relations_0, relations_1, n):
-
     # Implements the symmetric distance as descibed in the practical script.
-    difference_empty = set(relations_0[0]).difference(set(relations_1[0])).union(
-        set(relations_1[0]).difference(set(relations_0[0])))
-    difference_bi = set(relations_0[1]).difference(set(relations_1[1])).union(
-        set(relations_1[1]).difference(set(relations_0[1])))
-    difference_uni = set(relations_0["d"]).difference(set(relations_1["d"])).union(
-        set(relations_1["d"]).difference(set(relations_0["d"])))
+    difference_empty = (
+        set(relations_0[0])
+        .difference(set(relations_1[0]))
+        .union(set(relations_1[0]).difference(set(relations_0[0])))
+    )
+    difference_bi = (
+        set(relations_0[1])
+        .difference(set(relations_1[1]))
+        .union(set(relations_1[1]).difference(set(relations_0[1])))
+    )
+    difference_uni = (
+        set(relations_0["d"])
+        .difference(set(relations_1["d"]))
+        .union(set(relations_1["d"]).difference(set(relations_0["d"])))
+    )
 
-    relative_difference = len(difference_empty.union(difference_bi).union(difference_uni))
+    relative_difference = len(
+        difference_empty.union(difference_bi).union(difference_uni)
+    )
 
     # We do not have (n * (n - 1))/2 as we expect a directed graph.
     all_edges = n * (n - 1)
 
     return relative_difference / all_edges
 
-def partition_heuristic_scaffold(uni_weighted: dict, bi_weighted: dict, empty_weighted: dict, nodes: list,
-                                 partition_function, scoring_function, relations=None, uni=True, bi=True, median=False, reciprocal=False):
 
+def partition_heuristic_scaffold(
+    uni_weighted: dict,
+    bi_weighted: dict,
+    empty_weighted: dict,
+    nodes: list,
+    partition_function,
+    scoring_function,
+    relations=None,
+    uni=True,
+    bi=True,
+    median=False,
+    reciprocal=False,
+):
     # Initialize relations - here we collect the relations at each recursive step
     if relations == None:
         relations = {0: [], 1: [], "d": []}
@@ -303,28 +381,66 @@ def partition_heuristic_scaffold(uni_weighted: dict, bi_weighted: dict, empty_we
             if median:
                 if bi_weighted[(nodes[i], nodes[j])] <= bi_med:
                     # graph_bi.add_edge(nodes[i], nodes[j], weight=1.0)
-                    graph_bi.add_edge(nodes[i], nodes[j], weight=bi_weighted[(nodes[i], nodes[j])])
+                    graph_bi.add_edge(
+                        nodes[i], nodes[j], weight=bi_weighted[(nodes[i], nodes[j])]
+                    )
                 if empty_weighted[(nodes[i], nodes[j])] <= empty_med:
-                    graph_empty.add_edge(nodes[i], nodes[j],
-                                           weight=empty_weighted[(nodes[i], nodes[j])])
-                if (uni_weighted[(nodes[i], nodes[j])] + uni_weighted[(nodes[j], nodes[i])])/2 <= uni_med:
-                    graph_uni.add_edge(nodes[i], nodes[j],
-                                         weight=(uni_weighted[(nodes[i], nodes[j])] + uni_weighted[(nodes[j], nodes[i])])/2)
+                    graph_empty.add_edge(
+                        nodes[i], nodes[j], weight=empty_weighted[(nodes[i], nodes[j])]
+                    )
+                if (
+                    uni_weighted[(nodes[i], nodes[j])]
+                    + uni_weighted[(nodes[j], nodes[i])]
+                ) / 2 <= uni_med:
+                    graph_uni.add_edge(
+                        nodes[i],
+                        nodes[j],
+                        weight=(
+                            uni_weighted[(nodes[i], nodes[j])]
+                            + uni_weighted[(nodes[j], nodes[i])]
+                        )
+                        / 2,
+                    )
             else:
                 if reciprocal:
-                    graph_bi.add_edge(nodes[i], nodes[j], weight=1/bi_weighted[(nodes[i], nodes[j])])
-                    graph_empty.add_edge(nodes[i], nodes[j],
-                                         weight=1/empty_weighted[(nodes[i], nodes[j])])
-                    graph_uni.add_edge(nodes[i], nodes[j],
-                                       weight=1/((uni_weighted[(nodes[i], nodes[j])] + uni_weighted[
-                                           (nodes[j], nodes[i])]) / 2))
+                    graph_bi.add_edge(
+                        nodes[i], nodes[j], weight=1 / bi_weighted[(nodes[i], nodes[j])]
+                    )
+                    graph_empty.add_edge(
+                        nodes[i],
+                        nodes[j],
+                        weight=1 / empty_weighted[(nodes[i], nodes[j])],
+                    )
+                    graph_uni.add_edge(
+                        nodes[i],
+                        nodes[j],
+                        weight=1
+                        / (
+                            (
+                                uni_weighted[(nodes[i], nodes[j])]
+                                + uni_weighted[(nodes[j], nodes[i])]
+                            )
+                            / 2
+                        ),
+                    )
                 else:
-                    graph_bi.add_edge(nodes[i], nodes[j], weight=bi_weighted[(nodes[i], nodes[j])])
-                    graph_empty.add_edge(nodes[i], nodes[j],
-                                           weight=empty_weighted[(nodes[i], nodes[j])])
-                    graph_uni.add_edge(nodes[i], nodes[j],
-                                             weight=((uni_weighted[(nodes[i], nodes[j])] + uni_weighted[(nodes[j], nodes[i])])/2))
-
+                    graph_bi.add_edge(
+                        nodes[i], nodes[j], weight=bi_weighted[(nodes[i], nodes[j])]
+                    )
+                    graph_empty.add_edge(
+                        nodes[i], nodes[j], weight=empty_weighted[(nodes[i], nodes[j])]
+                    )
+                    graph_uni.add_edge(
+                        nodes[i],
+                        nodes[j],
+                        weight=(
+                            (
+                                uni_weighted[(nodes[i], nodes[j])]
+                                + uni_weighted[(nodes[j], nodes[i])]
+                            )
+                            / 2
+                        ),
+                    )
 
     # If only two nodes are left, we can only choose one partition.
     if len(nodes) == 2:
@@ -350,7 +466,6 @@ def partition_heuristic_scaffold(uni_weighted: dict, bi_weighted: dict, empty_we
 
     # This part is set up such that it can also deal with partitions that are not bipartitions of the vertex set
     for l in range(len(bi_partition)):
-
         # Choose one partition set as 'left'
         left = list(bi_partition[l])
         right = []
@@ -371,7 +486,6 @@ def partition_heuristic_scaffold(uni_weighted: dict, bi_weighted: dict, empty_we
             right_bi = right
 
     for l in range(len(empty_partition)):
-
         # Choose one partition set as 'left'
         left = list(empty_partition[l])
         right = []
@@ -392,7 +506,6 @@ def partition_heuristic_scaffold(uni_weighted: dict, bi_weighted: dict, empty_we
             right_empty = right
 
     for l in range(len(uni_partition)):
-
         # Choose one partition set as 'left'
         left = list(uni_partition[l])
         right = []
@@ -454,33 +567,84 @@ def partition_heuristic_scaffold(uni_weighted: dict, bi_weighted: dict, empty_we
 
     if part_bi:
         # Continue to recursively partition left_bi and right_bi. Resulting edges are collected in 'relations'.
-        relations = partition_heuristic_scaffold(uni_weighted, bi_weighted, empty_weighted, left_bi, partition_function,
-                                                 scoring_function, relations, uni=uni, bi=bi)
-        relations = partition_heuristic_scaffold(uni_weighted, bi_weighted, empty_weighted, right_bi, partition_function,
-                                                 scoring_function, relations)
+        relations = partition_heuristic_scaffold(
+            uni_weighted,
+            bi_weighted,
+            empty_weighted,
+            left_bi,
+            partition_function,
+            scoring_function,
+            relations,
+            uni=uni,
+            bi=bi,
+        )
+        relations = partition_heuristic_scaffold(
+            uni_weighted,
+            bi_weighted,
+            empty_weighted,
+            right_bi,
+            partition_function,
+            scoring_function,
+            relations,
+        )
         return relations
 
     if part_empty:
         # Continue to recursively partition left_empty and right_empty. Resulting edges are collected in 'relations'.
         # We forbid to partition G_1 and G_->1 for left_empty and right_empty.
-        relations = partition_heuristic_scaffold(uni_weighted, bi_weighted, empty_weighted, left_empty, partition_function,
-                                                scoring_function, relations, uni=False, bi=False)
-        relations = partition_heuristic_scaffold(uni_weighted, bi_weighted, empty_weighted, right_empty, partition_function,
-                                                 scoring_function, relations, uni=False, bi=False)
+        relations = partition_heuristic_scaffold(
+            uni_weighted,
+            bi_weighted,
+            empty_weighted,
+            left_empty,
+            partition_function,
+            scoring_function,
+            relations,
+            uni=False,
+            bi=False,
+        )
+        relations = partition_heuristic_scaffold(
+            uni_weighted,
+            bi_weighted,
+            empty_weighted,
+            right_empty,
+            partition_function,
+            scoring_function,
+            relations,
+            uni=False,
+            bi=False,
+        )
         return relations
 
     if part_uni:
         # Continue to recursively partition left_uni and right_uni. Resulting edges are collected in 'relations'.
         # We forbid to partition G_1 and for left_uni.
-        relations = partition_heuristic_scaffold(uni_weighted, bi_weighted, empty_weighted, left_uni,
-                                                 partition_function,
-                                                 scoring_function, relations, uni=uni, bi=False)
-        relations = partition_heuristic_scaffold(uni_weighted, bi_weighted, empty_weighted, right_uni,
-                                                 partition_function,
-                                                 scoring_function, relations, uni=uni, bi=bi)
+        relations = partition_heuristic_scaffold(
+            uni_weighted,
+            bi_weighted,
+            empty_weighted,
+            left_uni,
+            partition_function,
+            scoring_function,
+            relations,
+            uni=uni,
+            bi=False,
+        )
+        relations = partition_heuristic_scaffold(
+            uni_weighted,
+            bi_weighted,
+            empty_weighted,
+            right_uni,
+            partition_function,
+            scoring_function,
+            relations,
+            uni=uni,
+            bi=bi,
+        )
         return relations
 
-def algorithm_one(relations, nodes, order, symbol_attr='symbol'):
+
+def algorithm_one(relations, nodes, order, symbol_attr="symbol"):
     """
     Constructs a fitch di-cotree T that explains
     the partial set (E_0, E_1, E_d) on the set of nodes.
@@ -508,9 +672,11 @@ def algorithm_one(relations, nodes, order, symbol_attr='symbol'):
     idx = 1
 
     # This queue substitutes the recursive part of the algorithm
-    queue = [(V, (E_0, E_1, E_d), 0, None)]  # Vertex set, relations set, node name for iteration, dad
+    queue = [
+        (V, (E_0, E_1, E_d), 0, None)
+    ]  # Vertex set, relations set, node name for iteration, dad
 
-    while (len(queue) > 0):
+    while len(queue) > 0:
         V, E_sets, n_idx, dad_idx = queue.pop(0)
         # Evaluate conditions
         V_partition, symbol = evaluate_conditions(V, E_sets, order)
@@ -524,6 +690,7 @@ def algorithm_one(relations, nodes, order, symbol_attr='symbol'):
             idx += 1
     # End
     return T
+
 
 def algorithm_two(V, variables_uni, variables_bi, variables_empty):
     """
@@ -560,15 +727,17 @@ def algorithm_two(V, variables_uni, variables_bi, variables_empty):
             w_relations[frozenset([x, y])]["bidirectional"] = variables_bi[(x, y)]
             w_relations[frozenset([x, y])][None] = variables_empty[(x, y)]
 
-    E_star = {0: set(), 1: set(), 'd': set()}
+    E_star = {0: set(), 1: set(), "d": set()}
 
     w_relations_new = [[k, w_relations[k]] for k in w_relations.keys()]
-    w_relations_sorted = sorted(w_relations_new, reverse=True, key=lambda x: max([x[1][k] for k in x[1].keys()]) )
+    w_relations_sorted = sorted(
+        w_relations_new, reverse=True, key=lambda x: max([x[1][k] for k in x[1].keys()])
+    )
 
     for t in w_relations_sorted:
         x, y = tuple(t[0])[0], tuple(t[0])[1]
 
-        Rs = sorted(t[1], key= lambda x: t[1][x], reverse=True)
+        Rs = sorted(t[1], key=lambda x: t[1][x], reverse=True)
         # print(t[1])
         # print(Rs)
         # print("-----")
@@ -579,32 +748,28 @@ def algorithm_two(V, variables_uni, variables_bi, variables_empty):
             rel_type = classify_rel(rel)
             if rel_type in [0, 1]:
                 E_aux[rel_type].update(((x, y), (y, x)))
-            elif rel_type == 'd':
+            elif rel_type == "d":
                 E_aux[rel_type].add(rel)
 
             try:
-                algorithm_one({0:E_aux[0], 1:E_aux[1], "d":E_aux['d']}, V, (0, 1, 2))
+                algorithm_one({0: E_aux[0], 1: E_aux[1], "d": E_aux["d"]}, V, (0, 1, 2))
                 E_star = E_aux
                 flag = False
                 break
             except NotFitchSatError as e:
                 pass
         if flag:
-            raise NoSatRelation(f'Can not find a satisfiable relation for {(x, y)}')
+            raise NoSatRelation(f"Can not find a satisfiable relation for {(x, y)}")
 
     return {0: list(E_star[0]), 1: list(E_star[1]), "d": list(E_star["d"])}
 
-if __name__ == '__main__':
 
+if __name__ == "__main__":
     # Init some nodes
     nodes = [0, 1, 2]
 
     # Init some partial relations
-    relation = {
-        0: [],
-        1: [(0, 1), (1, 0)],
-        "d": [(1, 2)]
-    }
+    relation = {0: [], 1: [(0, 1), (1, 0)], "d": [(1, 2)]}
 
     # Init weights for unidirectional relations, bidirectional relations, and empty relations
     uni_weighted = {
@@ -613,7 +778,7 @@ if __name__ == '__main__':
         (1, 0): -100,
         (2, 1): -100,
         (0, 2): -100,
-        (2, 0): -100
+        (2, 0): -100,
     }
 
     bi_weighted = {
@@ -622,7 +787,7 @@ if __name__ == '__main__':
         (1, 2): -100,
         (2, 1): -100,
         (0, 2): -100,
-        (2, 0): -100
+        (2, 0): -100,
     }
 
     empty_weighted = {
@@ -631,7 +796,7 @@ if __name__ == '__main__':
         (1, 2): -100,
         (2, 1): -100,
         (0, 2): -100,
-        (2, 0): -100
+        (2, 0): -100,
     }
 
     # Compute a Cotree using the partial set defined prior.
@@ -645,13 +810,19 @@ if __name__ == '__main__':
     fitch_relations_012 = cotree_to_rel(fitch_cotree_012)
 
     # Run the greedy algorithm on the weighted relations initialized above.
-    fitch_relations_greedy = algorithm_two(nodes, uni_weighted, bi_weighted, empty_weighted)
+    fitch_relations_greedy = algorithm_two(
+        nodes, uni_weighted, bi_weighted, empty_weighted
+    )
 
     # Generate weights for "1" with the random.uniform sampling between 1.0 and 1.5
-    test_weights_bi = generate_weights(relation[1], random.uniform, [1.0, 1.5], symmetric=True)
+    test_weights_bi = generate_weights(
+        relation[1], random.uniform, [1.0, 1.5], symmetric=True
+    )
 
     # Generate weights for "d" with the random.random generator. As it takes no arguments, the parameters are empty.
-    test_weights_uni = generate_weights(relation["d"], random.random, [], symmetric=False)
+    test_weights_uni = generate_weights(
+        relation["d"], random.random, [], symmetric=False
+    )
 
     # Check a if the graph reconstructed from fitch_relations_210 is fitch-sat
     fitch_graph_210 = rel_to_fitch(fitch_relations_210, nodes)

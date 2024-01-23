@@ -43,11 +43,12 @@ def reduce_graph(edgeTuple, factor, special=False):
                     edgeList.remove(symmetricTuple)
                     numOfDeletes -= 1
 
+    print("----------------------------")
     print("Percentage deleted        - ", factor * 100)
     print("Special scenario          - ", special)
-    print("Empty relations           - ", edgeTuple[0])
-    print("Directed relations        - ", edgeTuple["d"])
-    print("Bidirected relations      - ", edgeTuple[1])
+    print("reduced empty relations   - ", edgeTuple[0])
+    print("reduced dir relations     - ", edgeTuple["d"])
+    print("reduced bidir relations   - ", edgeTuple[1])
 
     return edgeTuple
 
@@ -62,9 +63,32 @@ def count_edges(edgeTuple):
     return count
 
 
-def generate_di_cograph(nodes):
-    nodeId = len(nodes)
-    tempNodes = copy.deepcopy(nodes)
+def generate_xenology(path):
+    nodeset = nx.read_graphml(path + "/dFitch.graphml", int).nodes
+    relations = {1: [], "d": [], 0: []}
+
+    # print("bidirect: ", end="")
+    relations[1] = read_pickle(path + "/biRelations.pkl")
+
+    # print("unidirect: ", end="")
+    relations["d"] = read_pickle(path + "/uniRelations.pkl")
+
+    # print("empty: ", end="")
+    relations[0] = read_pickle(path + "/emptyRelations.pkl")
+
+    print("\n\n----------------------------")
+    print("XENOLOGY GRAPH")
+    print("Nodeset                   - ", nodeset)
+    print("Empty relations           - ", relations[0])
+    print("Directed relations        - ", relations["d"])
+    print("Bidirected relations      - ", relations[1])
+
+    return {"nodeset": nodeset, "relations": relations}
+
+
+def generate_di_cograph(nodeset):
+    nodeId = len(nodeset)
+    tempNodes = copy.deepcopy(nodeset)
 
     dicotree = nx.DiGraph()
 
@@ -72,10 +96,10 @@ def generate_di_cograph(nodes):
         leftTree = tempNodes.pop(random.randint(0, len(tempNodes) - 1))
         rightTree = tempNodes.pop(random.randint(0, len(tempNodes) - 1))
 
-        if leftTree in nodes:
+        if leftTree in nodeset:
             dicotree.add_node(leftTree, symbol=leftTree)
 
-        if rightTree in nodes:
+        if rightTree in nodeset:
             dicotree.add_node(rightTree, symbol=rightTree)
 
         operation = random.choice(["u", "b", "e"])
@@ -89,7 +113,7 @@ def generate_di_cograph(nodes):
         nodeId += 1
 
     decoded_dicotree = cotree_to_rel(dicotree)
-    dicograph = rel_to_fitch(decoded_dicotree, nodes)
+    dicograph = rel_to_fitch(decoded_dicotree, nodeset)
 
     labels = {node: data["symbol"] for node, data in dicotree.nodes(data=True)}
 
@@ -105,6 +129,15 @@ def generate_di_cograph(nodes):
             graph = nx.contracted_edge(graph, edge)
 
     """
+
+    relations_dicograph = graph_to_rel(dicograph)
+
+    print("\n\n----------------------------")
+    print("DI-COGRAPH")
+    print("Nodeset                   - ", nodeset)
+    print("Empty relations           - ", relations_dicograph[0])
+    print("Directed relations        - ", relations_dicograph["d"])
+    print("Bidirected relations      - ", relations_dicograph[1])
 
     # Lea
     # nx.draw(dicotree, with_labels=True, labels=labels)
@@ -144,59 +177,128 @@ def create_weights(nodes, relations, edge_value, non_edge_value=0):
     return weights
 
 
-if __name__ == "__main__":
-    path = "graph-prak-GFH/n25/D0.5_L0.5_H0.25/D0.5_L0.5_H0.25_n25_14"
+def benchmark_dicograph(graph, deletionRate, order):
+    nodeset = graph.nodes
+    relations = graph_to_rel(graph)
+    partial_dicograph = reduce_dicograph(graph, deletionRate)
 
-    nodeset_graph = nx.read_graphml(path + "/dFitch.graphml", int).nodes
-    edgeTuple = {1: [], "d": [], 0: []}
+    try:
+        fitch_cotree_dicograph = algorithm_one(partial_dicograph, nodeset, order)
+        symDiffAlgorithmOne = sym_diff(
+            relations, graph_to_rel(fitch_cotree_dicograph), len(nodeset)
+        )
 
-    # print("bidirect: ", end="")
-    edgeTuple[1] = read_pickle(path + "/biRelations.pkl")
+        weights_dicograph = create_weights(nodeset, partial_dicograph, 100)
 
-    # print("unidirect: ", end="")
-    edgeTuple["d"] = read_pickle(path + "/uniRelations.pkl")
+        fitch_relations_dicograph__greedy = algorithm_two(
+            nodeset,
+            weights_dicograph["uni_weighted"],
+            weights_dicograph["bi_weighted"],
+            weights_dicograph["empty_weighted"],
+        )
 
-    # print("empty: ", end="")
-    edgeTuple[0] = read_pickle(path + "/emptyRelations.pkl")
+        symDiffAlgorithmTwo = sym_diff(
+            relations, fitch_relations_dicograph__greedy, len(nodeset)
+        )
 
-    print()
-    print("XENOLOGY GRAPH")
-    print("Nodeset                   - ", nodeset_graph)
-    print("Empty relations           - ", edgeTuple[0])
-    print("Directed relations        - ", edgeTuple["d"])
-    print("Bidirected relations      - ", edgeTuple[1])
+        print("----------------------------")
+        print("1: Completed E*           - ", fitch_cotree_dicograph)
+        print("1: Symmetric difference   - ", symDiffAlgorithmOne)
+        print("2: Greedy Completed E*    - ", fitch_relations_dicograph__greedy)
+        print("2: Symmetric difference   - ", symDiffAlgorithmTwo)
+
+        isFitch = True
+
+    except:
+        isFitch = False
+
+    print("Is reduced graph fitch?   - ", isFitch)
+
+    return 1 if isFitch else 0
+
+
+def benchmark_xenology(nodeset, relations, deletionRate, order):
+    partial_graph = reduce_graph(relations, deletionRate)
+
+    fitch_cotree_graph = algorithm_one(partial_graph, nodeset, order)
+    symDiffAlgorithmOne = sym_diff(
+        relations, graph_to_rel(fitch_cotree_graph), len(nodeset)
+    )
+
+    weights_graph = create_weights(nodeset, partial_graph, 100)
+
+    fitch_relations_graph_greedy = algorithm_two(
+        nodeset,
+        weights_graph["uni_weighted"],
+        weights_graph["bi_weighted"],
+        weights_graph["empty_weighted"],
+    )
+    symDiffAlgorithmTwo = sym_diff(
+        relations, fitch_relations_graph_greedy, len(nodeset)
+    )
+
     print("----------------------------")
+    print("1: Completed E*           - ", fitch_cotree_graph)
+    print("1: Symmetric difference   - ", symDiffAlgorithmOne)
+    print("2: Greedy Completed E*    - ", fitch_relations_graph_greedy)
+    print("2: Symmetric difference   - ", symDiffAlgorithmTwo)
 
+
+if __name__ == "__main__":
+    """
     # task 2 & 2b
     partial_graph = reduce_graph(edgeTuple, 0.9)
 
-    # task 3
-    nodeset_dicograph = [i for i in range(10)]
-    random_dicograph = generate_di_cograph(nodeset_dicograph)
-    edgeTuple_dicograph = graph_to_rel(random_dicograph)
+    """
 
-    print()
-    print("DI-COGRAPH")
-    print("Nodeset                   - ", nodeset_dicograph)
-    print("Empty relations           - ", edgeTuple_dicograph[0])
-    print("Directed relations        - ", edgeTuple_dicograph["d"])
-    print("Bidirected relations      - ", edgeTuple_dicograph[1])
-    print("----------------------------")
+    order = (0, 1, 2)
+    deletionRate = 0.5
+
+    # BENCHMARK XENOLOGY
+    xenology = generate_xenology(
+        "graph-prak-GFH/n25/D0.5_L0.5_H0.25/D0.5_L0.5_H0.25_n25_14"
+    )
+    benchmark_xenology(xenology["nodeset"], xenology["relations"], deletionRate, order)
+
+    # BENCHMARK DICOGRAPH
+
+    fitchGraphCounter = 0
+    fitchReducedGraphCounter = 0
+    samples = 10
+    numberOfNodesDicograph = 5
+
+    for i in range(samples):
+        # task 3
+        nodeset_dicograph = [i for i in range(numberOfNodesDicograph)]
+        random_dicograph = generate_di_cograph(nodeset_dicograph)
+
+        isFitch = check_fitch_graph(random_dicograph)
+        print("Is fitch graph?           - ", isFitch)
+        if isFitch:
+            fitchGraphCounter += 1
+
+        fitchReducedGraphCounter += benchmark_dicograph(
+            random_dicograph, deletionRate, order
+        )
 
     # task 4
+    print("----------------------------")
+    print("DiCograph is fitch        - ", fitchGraphCounter, "/", samples)
+    print("Reduc DiCograph is fitch  - ", fitchReducedGraphCounter, "/", samples)
+
+    """
+    # task 5 create partial tuples on dicograph
     partial_dicograph = reduce_dicograph(random_dicograph, 0.9)
 
-    # generate weights for partial relations
-    weights_graph = create_weights(nodeset_graph, partial_graph, 100)
-    weights_dicograph = create_weights(nodeset_dicograph, partial_dicograph, 100)
-
-    # task 5
-    # """
+    # task 6
     fitch_cotree_graph_012 = algorithm_one(partial_graph, nodeset_graph, (0, 1, 2))
     fitch_cotree_dicograph_012 = algorithm_one(
         partial_dicograph, nodeset_dicograph, (0, 1, 2)
     )
-    # """
+
+    # generate weights for partial relations
+    weights_graph = create_weights(nodeset_graph, partial_graph, 100)
+    weights_dicograph = create_weights(nodeset_dicograph, partial_dicograph, 100)
 
     fitch_relations_graph_greedy = algorithm_two(
         nodeset_graph,
@@ -215,3 +317,4 @@ if __name__ == "__main__":
     print("Completed E*              - ", fitch_cotree_dicograph_012)
     print("Greedy Completed E*       - ", fitch_relations_graph_greedy)
     print("Greedy Completed E*       - ", fitch_relations_dicograph__greedy)
+    """
