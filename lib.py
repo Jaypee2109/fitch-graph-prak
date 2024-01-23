@@ -1,6 +1,7 @@
 import random
 from copy import deepcopy
 import networkx as nx
+import statistics
 from helper_functions import *
 
 def graph_to_rel(graph: nx.DiGraph):
@@ -266,7 +267,11 @@ def sym_diff(relations_0, relations_1, n):
     return relative_difference / all_edges
 
 def partition_heuristic_scaffold(uni_weighted: dict, bi_weighted: dict, empty_weighted: dict, nodes: list,
-                                 partition_function, scoring_function, relations={0:[], 1:[], "d":[]} , uni=True, bi=True):
+                                 partition_function, scoring_function, relations=None, uni=True, bi=True, median=False, reciprocal=False):
+
+    # Initialize relations - here we collect the relations at each recursive step
+    if relations == None:
+        relations = {0: [], 1: [], "d": []}
 
     # Recursion abort condition
     if len(nodes) == 1:
@@ -277,18 +282,45 @@ def partition_heuristic_scaffold(uni_weighted: dict, bi_weighted: dict, empty_we
     graph_empty = nx.Graph()
     graph_uni = nx.Graph()
 
+    # Compute the median for each of the weights.
+    bi_list = [bi_weighted[k] for k in bi_weighted.keys()]
+    uni_list = [uni_weighted[k] for k in uni_weighted.keys()]
+    empty_list = [empty_weighted[k] for k in empty_weighted.keys()]
+
+    bi_med = statistics.median(bi_list)
+    uni_med = statistics.median(uni_list)
+    empty_med = statistics.median(empty_list)
+
     # Add all the edge weights. You could also add a filter here that,
     # for example, could add only edges above a certain weight
     for i in range(0, len(nodes)):
         for j in range(0, len(nodes)):
             if i == j:
                 continue
-            graph_bi.add_edge(nodes[i], nodes[j], weight=bi_weighted[(nodes[i], nodes[j])])
-            graph_empty.add_edge(nodes[i], nodes[j],
-                                       weight=empty_weighted[(nodes[i], nodes[j])])
-            graph_uni.add_edge(nodes[i], nodes[j],
-                                     weight=max(uni_weighted[(nodes[i], nodes[j])],
-                                                uni_weighted[(nodes[j], nodes[i])]))
+            if median:
+                if bi_weighted[(nodes[i], nodes[j])] <= bi_med:
+                    # graph_bi.add_edge(nodes[i], nodes[j], weight=1.0)
+                    graph_bi.add_edge(nodes[i], nodes[j], weight=bi_weighted[(nodes[i], nodes[j])])
+                if empty_weighted[(nodes[i], nodes[j])] <= empty_med:
+                    graph_empty.add_edge(nodes[i], nodes[j],
+                                           weight=empty_weighted[(nodes[i], nodes[j])])
+                if (uni_weighted[(nodes[i], nodes[j])] + uni_weighted[(nodes[j], nodes[i])])/2 <= uni_med:
+                    graph_uni.add_edge(nodes[i], nodes[j],
+                                         weight=(uni_weighted[(nodes[i], nodes[j])] + uni_weighted[(nodes[j], nodes[i])])/2)
+            else:
+                if reciprocal:
+                    graph_bi.add_edge(nodes[i], nodes[j], weight=1/bi_weighted[(nodes[i], nodes[j])])
+                    graph_empty.add_edge(nodes[i], nodes[j],
+                                         weight=1/empty_weighted[(nodes[i], nodes[j])])
+                    graph_uni.add_edge(nodes[i], nodes[j],
+                                       weight=1/((uni_weighted[(nodes[i], nodes[j])] + uni_weighted[
+                                           (nodes[j], nodes[i])]) / 2))
+                else:
+                    graph_bi.add_edge(nodes[i], nodes[j], weight=bi_weighted[(nodes[i], nodes[j])])
+                    graph_empty.add_edge(nodes[i], nodes[j],
+                                           weight=empty_weighted[(nodes[i], nodes[j])])
+                    graph_uni.add_edge(nodes[i], nodes[j],
+                                             weight=((uni_weighted[(nodes[i], nodes[j])] + uni_weighted[(nodes[j], nodes[i])])/2))
 
 
     # If only two nodes are left, we can only choose one partition.
@@ -296,6 +328,7 @@ def partition_heuristic_scaffold(uni_weighted: dict, bi_weighted: dict, empty_we
         uni_partition = [[nodes[0]], [nodes[1]]]
         bi_partition = [[nodes[0]], [nodes[1]]]
         empty_partition = [[nodes[0]], [nodes[1]]]
+
     # Otherwise we partition as usual. Here it is expected that the partition functions returns a list of lists,
     # for example [[0, 1], [2, 3]]
     else:
