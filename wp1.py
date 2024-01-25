@@ -64,26 +64,22 @@ def count_edges(edgeTuple):
 
 
 def generate_xenology(path):
-    nodeset = nx.read_graphml(path + "/dFitch.graphml", int).nodes
-    relations = {1: [], "d": [], 0: []}
+    graph = nx.read_graphml(path + "/dFitch.graphml", node_type=int)
+    # relations = {1: [], "d": [], 0: []}
+    # relations[1] = read_pickle(path + "/biRelations.pkl")
+    # relations["d"] = read_pickle(path + "/uniRelations.pkl")
+    # relations[0] = read_pickle(path + "/emptyRelations.pkl")
 
-    # print("bidirect: ", end="")
-    relations[1] = read_pickle(path + "/biRelations.pkl")
-
-    # print("unidirect: ", end="")
-    relations["d"] = read_pickle(path + "/uniRelations.pkl")
-
-    # print("empty: ", end="")
-    relations[0] = read_pickle(path + "/emptyRelations.pkl")
+    relations = graph_to_rel(graph)
 
     print("\n\n----------------------------")
     print("XENOLOGY GRAPH")
-    print("Nodeset                   - ", nodeset)
+    print("Nodeset                   - ", graph.nodes)
     print("Empty relations           - ", relations[0])
     print("Directed relations        - ", relations["d"])
     print("Bidirected relations      - ", relations[1])
 
-    return {"nodeset": nodeset, "relations": relations}
+    return {"graph": graph, "relations": relations}
 
 
 def generate_di_cograph(nodeset):
@@ -127,7 +123,6 @@ def generate_di_cograph(nodeset):
         if label1 is not None and label2 is not None and label1 == label2:
             # Contract the edge
             graph = nx.contracted_edge(graph, edge)
-
     """
 
     relations_dicograph = graph_to_rel(dicograph)
@@ -222,7 +217,7 @@ def benchmark_xenology(nodeset, relations, deletionRate, order):
 
     fitch_cotree_graph = algorithm_one(partial_graph, nodeset, order)
     symDiffAlgorithmOne = sym_diff(
-        relations, graph_to_rel(fitch_cotree_graph), len(nodeset)
+        relations, cotree_to_rel(fitch_cotree_graph), len(nodeset)
     )
 
     weights_graph = create_weights(nodeset, partial_graph, 100)
@@ -258,7 +253,9 @@ if __name__ == "__main__":
     xenology = generate_xenology(
         "graph-prak-GFH/n25/D0.5_L0.5_H0.25/D0.5_L0.5_H0.25_n25_14"
     )
-    benchmark_xenology(xenology["nodeset"], xenology["relations"], deletionRate, order)
+    benchmark_xenology(
+        xenology["graph"].nodes, xenology["relations"], deletionRate, order
+    )
 
     # BENCHMARK DICOGRAPH
 
