@@ -18,6 +18,17 @@ def generate_weights_full(relations, distributions):
     return weighted_relations
 
 
+def bipartition(nodeset):
+    if len(nodeset) < 2:
+        return [nodeset, []]
+
+    random.shuffle(nodeset)
+
+    midpoint = len(nodeset) // 2
+
+    return [nodeset[:midpoint], nodeset[midpoint:]]
+
+
 if __name__ == "__main__":
     # generate fitch graph based on xenology dataset
     xenology = generate_xenology(
