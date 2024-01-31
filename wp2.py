@@ -90,7 +90,7 @@ def bipartition(graph):
 if __name__ == "__main__":
     # generate fitch graph based on xenology dataset
     xenology = generate_xenology(
-        "graph-prak-GFH/n25/D0.5_L0.5_H0.25/D0.5_L0.5_H0.25_n25_14"
+        "graph-prak-GFH/n10/D0.3_L0.3_H0.9/D0.3_L0.3_H0.9_n10_74"
     )
 
     relations = xenology["relations"]
@@ -120,3 +120,16 @@ if __name__ == "__main__":
         bipartition,
         scoring_function_average,
     )
+    print("hier")
+    print(sym_diff(relations, fitch_relations_partition, len(graph)))
+
+    """
+    fitch_relations_louvain = partition_heuristic_scaffold(
+        weighted_relations["d"],
+        weighted_relations[1],
+        weighted_relations[0],
+        list(graph.nodes),
+        louvain_custom,
+        scoring_function_average,
+    )
+    """

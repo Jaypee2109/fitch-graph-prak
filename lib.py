@@ -3,6 +3,7 @@ from copy import deepcopy
 import networkx as nx
 import statistics
 from helper_functions import *
+from louvain import *
 
 
 def graph_to_rel(graph: nx.DiGraph):
@@ -847,6 +848,7 @@ if __name__ == "__main__":
     # decoded_cotree = cotree_to_rel(cotree)
 
     # Thats how you can call the partition heuristic, simp_part and simp_score still need to be implemented.
+    """
     fitch_relations_partition = partition_heuristic_scaffold(
         uni_weighted,
         bi_weighted,
@@ -857,6 +859,7 @@ if __name__ == "__main__":
     )
 
     print(fitch_relations_partition)
+    """
 
     # Output
     print("Input relations           - ", relation)
