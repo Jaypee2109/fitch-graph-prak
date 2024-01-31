@@ -558,12 +558,12 @@ def partition_heuristic_scaffold(
         part_empty = True
 
     # Debug lines. Remove the # to output the vertex set, partitions, and scores at each recursive step.
-    # print("VERTEX SET  ", nodes)
-    # print("UNI SCORE   ",  score_uni, ", PARTITION ", left_uni, " ", right_uni)
-    # print("BI SCORE    ",  score_bi, ", PARTITION ", left_bi, " ", right_bi)
-    # print("EMPTY SCORE ",  score_empty, ", PARTITION ", left_empty, " ", right_empty)
-    # print("--------------------")
-    # input()
+    print("VERTEX SET  ", nodes)
+    print("UNI SCORE   ", score_uni, ", PARTITION ", left_uni, " ", right_uni)
+    print("BI SCORE    ", score_bi, ", PARTITION ", left_bi, " ", right_bi)
+    print("EMPTY SCORE ", score_empty, ", PARTITION ", left_empty, " ", right_empty)
+    print("--------------------")
+    input()
 
     if part_bi:
         # Continue to recursively partition left_bi and right_bi. Resulting edges are collected in 'relations'.
@@ -800,19 +800,20 @@ if __name__ == "__main__":
     }
 
     # Compute a Cotree using the partial set defined prior.
-    fitch_cotree_210 = algorithm_one(relation, nodes, (1, 2, 0))
+    # fitch_cotree_210 = algorithm_one(relation, nodes, (1, 2, 0))
 
     # Compute a Cotree using the partial set defined prior but with a different order of Rules.
-    fitch_cotree_012 = algorithm_one(relation, nodes, (0, 1, 2))
+    # fitch_cotree_012 = algorithm_one(relation, nodes, (0, 1, 2))
 
     # Parse the cotrees just computed into a relations dictionary.
-    fitch_relations_210 = cotree_to_rel(fitch_cotree_210)
-    fitch_relations_012 = cotree_to_rel(fitch_cotree_012)
-
+    # fitch_relations_210 = cotree_to_rel(fitch_cotree_210)
+    # fitch_relations_012 = cotree_to_rel(fitch_cotree_012)
+    """
     # Run the greedy algorithm on the weighted relations initialized above.
     fitch_relations_greedy = algorithm_two(
         nodes, uni_weighted, bi_weighted, empty_weighted
     )
+    """
 
     # Generate weights for "1" with the random.uniform sampling between 1.0 and 1.5
     test_weights_bi = generate_weights(
@@ -825,8 +826,8 @@ if __name__ == "__main__":
     )
 
     # Check a if the graph reconstructed from fitch_relations_210 is fitch-sat
-    fitch_graph_210 = rel_to_fitch(fitch_relations_210, nodes)
-    is_fitch = check_fitch_graph(fitch_graph_210)
+    # fitch_graph_210 = rel_to_fitch(fitch_relations_210, nodes)
+    # is_fitch = check_fitch_graph(fitch_graph_210)
 
     # Initialize an empty cotree.
     cotree = nx.DiGraph()
@@ -843,18 +844,27 @@ if __name__ == "__main__":
     cotree.add_edge(0, 3)
 
     # Translate cotree to relations
-    decoded_cotree = cotree_to_rel(cotree)
+    # decoded_cotree = cotree_to_rel(cotree)
 
     # Thats how you can call the partition heuristic, simp_part and simp_score still need to be implemented.
-    # fitch_relations_partition = partition_heuristic_scaffold(uni_weighted, bi_weighted, empty_weighted, nodes, simp_part, simp_score)
+    fitch_relations_partition = partition_heuristic_scaffold(
+        uni_weighted,
+        bi_weighted,
+        empty_weighted,
+        nodes,
+        bipartition,
+        scoring_function_sum,
+    )
+
+    print(fitch_relations_partition)
 
     # Output
     print("Input relations           - ", relation)
-    print("Completed E*              - ", fitch_relations_210)
-    print("Is Fitch Sat?             - ", is_fitch)
-    print("Different Completed E*    - ", fitch_relations_012)
-    print("Greedy Completed E*       - ", fitch_relations_greedy)
+    # print("Completed E*              - ", fitch_relations_210)
+    # print("Is Fitch Sat?             - ", is_fitch)
+    # print("Different Completed E*    - ", fitch_relations_012)
+    # print("Greedy Completed E*       - ", fitch_relations_greedy)
     print("Generated weights 1       - ", test_weights_bi)
     print("Generated weights d       - ", test_weights_uni)
-    print("Extracted cotree rels     - ", decoded_cotree)
+    # print("Extracted cotree rels     - ", decoded_cotree)
     # print("Partition Completed E*    - ", fitch_relations_partition)
