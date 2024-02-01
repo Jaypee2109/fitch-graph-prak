@@ -556,12 +556,11 @@ def partition_heuristic_scaffold(
         part_empty = True
 
     # Debug lines. Remove the # to output the vertex set, partitions, and scores at each recursive step.
-    print("VERTEX SET  ", nodes)
-    print("UNI SCORE   ", score_uni, ", PARTITION ", left_uni, " ", right_uni)
-    print("BI SCORE    ", score_bi, ", PARTITION ", left_bi, " ", right_bi)
-    print("EMPTY SCORE ", score_empty, ", PARTITION ", left_empty, " ", right_empty)
-    print("--------------------")
-    input()
+    # print("VERTEX SET  ", nodes)
+    # print("UNI SCORE   ", score_uni, ", PARTITION ", left_uni, " ", right_uni)
+    # print("BI SCORE    ", score_bi, ", PARTITION ", left_bi, " ", right_bi)
+    # print("EMPTY SCORE ", score_empty, ", PARTITION ", left_empty, " ", right_empty)
+    # print("--------------------")
 
     if part_bi:
         # Continue to recursively partition left_bi and right_bi. Resulting edges are collected in 'relations'.

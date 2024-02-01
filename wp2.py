@@ -118,18 +118,18 @@ if __name__ == "__main__":
         weighted_relations[0],
         list(graph.nodes),
         bipartition,
-        scoring_function_average,
+        scoring_function_sum,
     )
-    print("hier")
+
     print(sym_diff(relations, fitch_relations_partition, len(graph)))
 
-    """
     fitch_relations_louvain = partition_heuristic_scaffold(
         weighted_relations["d"],
         weighted_relations[1],
         weighted_relations[0],
         list(graph.nodes),
-        louvain_custom,
+        louvain_standard,
         scoring_function_average,
     )
-    """
+
+    print(sym_diff(relations, fitch_relations_louvain, len(graph)))

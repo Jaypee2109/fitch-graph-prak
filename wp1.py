@@ -5,6 +5,9 @@ import pydot
 import math
 import random
 import copy
+import os
+import re
+import csv
 from lib import *
 
 
@@ -43,13 +46,6 @@ def reduce_graph(edgeTuple, factor, special=False):
                     edgeList.remove(symmetricTuple)
                     numOfDeletes -= 1
 
-    print("----------------------------")
-    print("Percentage deleted        - ", factor * 100)
-    print("Special scenario          - ", special)
-    print("reduced empty relations   - ", edgeTuple[0])
-    print("reduced dir relations     - ", edgeTuple["d"])
-    print("reduced bidir relations   - ", edgeTuple[1])
-
     return edgeTuple
 
 
@@ -71,13 +67,6 @@ def generate_xenology(path):
     # relations[0] = read_pickle(path + "/emptyRelations.pkl")
 
     relations = graph_to_rel(graph)
-
-    print("\n\n----------------------------")
-    print("XENOLOGY GRAPH")
-    print("Nodeset                   - ", graph.nodes)
-    print("Empty relations           - ", relations[0])
-    print("Directed relations        - ", relations["d"])
-    print("Bidirected relations      - ", relations[1])
 
     return {"graph": graph, "relations": relations}
 
@@ -137,16 +126,7 @@ def generate_di_cograph(nodeset):
             graph = nx.contracted_edge(graph, edge)
     """
 
-    relations_dicograph = graph_to_rel(dicograph)
-
-    print("\n\n----------------------------")
-    print("DI-COGRAPH")
-    print("Nodeset                   - ", nodeset)
-    print("Empty relations           - ", relations_dicograph[0])
-    print("Directed relations        - ", relations_dicograph["d"])
-    print("Bidirected relations      - ", relations_dicograph[1])
-
-    return dicograph
+    return {"graph": dicograph, "relations": decoded_dicotree}
 
 
 def create_weights(nodes, relations, edge_value, non_edge_value=0):
@@ -244,49 +224,289 @@ def benchmark_xenology(nodeset, relations, deletionRate, order):
     print("2: Symmetric difference   - ", symDiffAlgorithmTwo)
 
 
+def extract_values(input_string):
+    """
+    Extrahiert die Zahlen aus einem String im Format Dx.x_Lx.x_Hx.x.
+
+    Parameters:
+    - input_string (str): Der Eingangsstring.
+
+    Returns:
+    - tuple: Ein Tupel mit den extrahierten Werten (D-Wert, L-Wert, H-Wert).
+    """
+    pattern = r"D(\d+\.\d+)_L(\d+\.\d+)_H(\d+\.\d+)"
+    match = re.match(pattern, input_string)
+
+    if match:
+        d_value = float(match.group(1))
+        l_value = float(match.group(2))
+        h_value = float(match.group(3))
+        return d_value, l_value, h_value
+    else:
+        return None
+
+
+def query(root):
+    for node_filename in os.listdir(root):
+        node_filename_path = os.path.join(root, node_filename)
+
+        for configuration_filename in os.listdir(node_filename_path):
+            configuration_filename_path = os.path.join(
+                node_filename_path, configuration_filename
+            )
+
+            for rate_filename in os.listdir(configuration_filename_path):
+                rate_filename_path = os.path.join(
+                    configuration_filename_path, rate_filename
+                )
+
+                configuration = extract_values(configuration_filename)
+                rate = re.search(r"(\d+)$", rate_filename)
+
+                # create xenology graph
+                xenology = generate_xenology(rate_filename_path)
+                xenology_relations = xenology["relations"]
+                xenology_nodes = xenology["graph"].nodes
+
+                # METADATA
+                TYP = "XENOLOGY"
+                PFAD = rate_filename_path
+                KNOTENZAHL = len(xenology_nodes)
+                DUPLIKATION = float(configuration[0])
+                VERLUST = float(configuration[1])
+                HGT = float(configuration[2])
+                EVOLUTIONSRATE = int(rate.group(1))
+
+                # METADATA
+                BI_ANZAHL = len(xenology_relations[1])
+                DI_ANZAHL = len(xenology_relations["d"])
+                EM_ANZAHL = len(xenology_relations[0])
+                FITCH = True
+
+                deletion_rate_percentage = round(random.uniform(0.1, 0.9), 1)
+                special_scenario = random.choice([True, False])
+                xenology_partial = reduce_graph(
+                    xenology_relations, deletion_rate_percentage, special_scenario
+                )
+
+                # METADATA
+                DELETION_RATE = deletion_rate_percentage
+                SPECIAL = special_scenario
+                PARTIAL_BI_ANZAHL = len(xenology_partial[1])
+                PARTIAL_DI_ANZAHL = len(xenology_partial["d"])
+                PARTIAL_EM_ANZAHL = len(xenology_partial[0])
+
+                isFitch = False
+                symDiffAlgorithmOne = -1.0
+                symDiffAlgorithmTwo = -1.0
+                nums = [0, 1, 2]
+                random.shuffle(nums)
+                order = tuple(nums)
+
+                try:
+                    fitch_cotree_graph = algorithm_one(
+                        xenology_partial, xenology_nodes, order
+                    )
+                    symDiffAlgorithmOne = sym_diff(
+                        xenology_relations,
+                        cotree_to_rel(fitch_cotree_graph),
+                        len(xenology_nodes),
+                    )
+
+                    isFitch = True
+
+                    weights_graph = create_weights(
+                        xenology_nodes, xenology_partial, 100
+                    )
+
+                    fitch_relations_graph_greedy = algorithm_two(
+                        xenology_nodes,
+                        weights_graph["uni_weighted"],
+                        weights_graph["bi_weighted"],
+                        weights_graph["empty_weighted"],
+                    )
+                    symDiffAlgorithmTwo = sym_diff(
+                        xenology_relations,
+                        fitch_relations_graph_greedy,
+                        len(xenology_nodes),
+                    )
+                except:
+                    print("NO FITCH XENOLOGY")
+
+                PARTIAL_FITCH = isFitch
+                ALGO_ONE_ORDER = order
+                ALGO_ONE_DIFF = symDiffAlgorithmOne
+                ALGO_TWO_DIFF = symDiffAlgorithmTwo
+
+                append_variables_to_csv(
+                    "wp1.csv",
+                    TYP=TYP,
+                    PFAD=PFAD,
+                    KNOTENZAHL=KNOTENZAHL,
+                    DUPLIKATION=DUPLIKATION,
+                    VERLUST=VERLUST,
+                    HGT=HGT,
+                    EVOLUTIONSRATE=EVOLUTIONSRATE,
+                    BI_ANZAHL=BI_ANZAHL,
+                    DI_ANZAHL=DI_ANZAHL,
+                    EM_ANZAHL=EM_ANZAHL,
+                    FITCH=FITCH,
+                    DELETION_RATE=DELETION_RATE,
+                    SPECIAL=SPECIAL,
+                    PARTIAL_BI_ANZAHL=PARTIAL_BI_ANZAHL,
+                    PARTIAL_DI_ANZAHL=PARTIAL_DI_ANZAHL,
+                    PARTIAL_EM_ANZAHL=PARTIAL_EM_ANZAHL,
+                    PARTIAL_FITCH=PARTIAL_FITCH,
+                    ALGO_ONE_ORDER=ALGO_ONE_ORDER,
+                    ALGO_ONE_DIFF=ALGO_ONE_DIFF,
+                    ALGO_TWO_DIFF=ALGO_TWO_DIFF,
+                )
+
+                # ---------------------------------------
+                # RANDOM DICOGRAPH
+
+                dicograph_wrapper = generate_di_cograph(list(xenology_nodes))
+                dicograph = dicograph_wrapper["graph"]
+                dicograph_relations = dicograph_wrapper["relations"]
+                dicograph_nodes = list(xenology_nodes)
+
+                # METADATA
+                TYP = "DI_COGRAPH"
+                PFAD = ""
+                KNOTENZAHL = len(dicograph_nodes)
+                DUPLIKATION = -1.0
+                VERLUST = -1.0
+                HGT = -1.0
+                EVOLUTIONSRATE = -1
+
+                # METADATA
+                BI_ANZAHL = len(dicograph_relations[1])
+                DI_ANZAHL = len(dicograph_relations["d"])
+                EM_ANZAHL = len(dicograph_relations[0])
+                FITCH = check_fitch_graph(dicograph)
+
+                partial_dicograph = reduce_dicograph(
+                    dicograph, deletion_rate_percentage, special_scenario
+                )
+
+                # METADATA
+                DELETION_RATE = deletion_rate_percentage
+                SPECIAL = special_scenario
+                PARTIAL_BI_ANZAHL = len(partial_dicograph[1])
+                PARTIAL_DI_ANZAHL = len(partial_dicograph["d"])
+                PARTIAL_EM_ANZAHL = len(partial_dicograph[0])
+
+                isFitch = False
+                symDiffAlgorithmOne = -1.0
+                symDiffAlgorithmTwo = -1.0
+
+                try:
+                    fitch_cotree_dicograph = algorithm_one(
+                        partial_dicograph, dicograph_nodes, order
+                    )
+                    symDiffAlgorithmOne = sym_diff(
+                        dicograph_relations,
+                        cotree_to_rel(fitch_cotree_dicograph),
+                        len(dicograph_nodes),
+                    )
+
+                    isFitch = True
+
+                    weights_dicograph = create_weights(
+                        dicograph_nodes, partial_dicograph, 100
+                    )
+
+                    fitch_relations_dicograph_greedy = algorithm_two(
+                        dicograph_nodes,
+                        weights_dicograph["uni_weighted"],
+                        weights_dicograph["bi_weighted"],
+                        weights_dicograph["empty_weighted"],
+                    )
+                    symDiffAlgorithmTwo = sym_diff(
+                        dicograph_relations,
+                        fitch_relations_dicograph_greedy,
+                        len(dicograph_nodes),
+                    )
+                except:
+                    print("NO FITCH XENOLOGY")
+
+                PARTIAL_FITCH = isFitch
+                ALGO_ONE_ORDER = order
+                ALGO_ONE_DIFF = symDiffAlgorithmOne
+                ALGO_TWO_DIFF = symDiffAlgorithmTwo
+
+                append_variables_to_csv(
+                    "wp1.csv",
+                    TYP=TYP,
+                    PFAD=PFAD,
+                    KNOTENZAHL=KNOTENZAHL,
+                    DUPLIKATION=DUPLIKATION,
+                    VERLUST=VERLUST,
+                    HGT=HGT,
+                    EVOLUTIONSRATE=EVOLUTIONSRATE,
+                    BI_ANZAHL=BI_ANZAHL,
+                    DI_ANZAHL=DI_ANZAHL,
+                    EM_ANZAHL=EM_ANZAHL,
+                    FITCH=FITCH,
+                    DELETION_RATE=DELETION_RATE,
+                    SPECIAL=SPECIAL,
+                    PARTIAL_BI_ANZAHL=PARTIAL_BI_ANZAHL,
+                    PARTIAL_DI_ANZAHL=PARTIAL_DI_ANZAHL,
+                    PARTIAL_EM_ANZAHL=PARTIAL_EM_ANZAHL,
+                    PARTIAL_FITCH=PARTIAL_FITCH,
+                    ALGO_ONE_ORDER=ALGO_ONE_ORDER,
+                    ALGO_ONE_DIFF=ALGO_ONE_DIFF,
+                    ALGO_TWO_DIFF=ALGO_TWO_DIFF,
+                )
+
+
+def append_variables_to_csv(file_name, **kwargs):
+    """
+    Fügt eine neue Zeile mit den Werten der Variablen zur CSV-Datei hinzu.
+
+    Parameters:
+    - file_name (str): Der Dateiname der CSV-Datei.
+    - **kwargs: Variablen und ihre Werte.
+    """
+    file_path = os.path.join(os.getcwd() + "/csv", file_name)
+    all_columns = list(kwargs.keys())
+
+    # Überprüfe, ob die Datei leer ist
+    is_empty = not os.path.isfile(file_path) or os.stat(file_path).st_size == 0
+
+    with open(file_path, "a", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=all_columns)
+
+        # Schreibe die Überschriften nur, wenn die Datei leer ist
+        if is_empty:
+            writer.writeheader()
+
+        row_data = {column: kwargs.get(column, "") for column in all_columns}
+        writer.writerow(row_data)
+
+
 if __name__ == "__main__":
-    """
-    # task 2 & 2b
-    partial_graph = reduce_graph(edgeTuple, 0.9)
-
-    """
-
-    order = (0, 1, 2)
-    deletionRate = 0.5
-
-    # BENCHMARK XENOLOGY
-    xenology = generate_xenology(
-        "graph-prak-GFH/n25/D0.5_L0.5_H0.25/D0.5_L0.5_H0.25_n25_14"
-    )
-    benchmark_xenology(
-        xenology["graph"].nodes, xenology["relations"], deletionRate, order
-    )
-
-    # BENCHMARK DICOGRAPH
-
-    fitchGraphCounter = 0
-    fitchReducedGraphCounter = 0
-    samples = 10
-    numberOfNodesDicograph = 5
-
-    for i in range(samples):
-        # task 3
-        nodeset_dicograph = [i for i in range(numberOfNodesDicograph)]
-        random_dicograph = generate_di_cograph(nodeset_dicograph)
-
-        isFitch = check_fitch_graph(random_dicograph)
-        print("Is fitch graph?           - ", isFitch)
-        if isFitch:
-            fitchGraphCounter += 1
-
-        fitchReducedGraphCounter += benchmark_dicograph(
-            random_dicograph, deletionRate, order
-        )
-
-    # task 4
-    print("----------------------------")
-    print("DiCograph is fitch        - ", fitchGraphCounter, "/", samples)
-    print("Reduc DiCograph is fitch  - ", fitchReducedGraphCounter, "/", samples)
+    query("graph-prak-GFH")
+    TYP = ""
+    PFAD = ""
+    KNOTENZAHL = -1
+    DUPLIKATION = -1.0
+    VERLUST = -1.0
+    HGT = -1.0
+    EVOLUTIONSRATE = -1
+    BI_ANZAHL = -1
+    DI_ANZAHL = -1
+    EM_ANZAHL = -1
+    FITCH = False
+    DELETION_RATE = -1.0
+    SPECIAL = False
+    PARTIAL_BI_ANZAHL = -1
+    PARTIAL_DI_ANZAHL = -1
+    PARTIAL_EM_ANZAHL = -1
+    PARTIAL_FITCH = False
+    ALGO_ONE_ORDER = (-1, -1, -1)
+    ALGO_ONE_DIFF = -1.0
+    ALGO_TWO_DIFF = -1.0
 
     """
     # task 5 create partial tuples on dicograph
