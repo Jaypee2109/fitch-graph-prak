@@ -120,7 +120,7 @@ def generate_di_cograph(nodeset):
     pos = nx.nx_agraph.graphviz_layout(reversed_dicotree, prog="dot")
     nx.draw(reversed_dicotree, pos, with_labels=True, labels=labels)
 
-    plt.show()
+    # plt.show()
 
     decoded_dicotree = cotree_to_rel(reversed_dicotree)
     dicograph = rel_to_fitch(decoded_dicotree, nodeset)
@@ -185,7 +185,7 @@ def benchmark_dicograph(graph, deletionRate, order):
     try:
         fitch_cotree_dicograph = algorithm_one(partial_dicograph, nodeset, order)
         symDiffAlgorithmOne = sym_diff(
-            relations, graph_to_rel(fitch_cotree_dicograph), len(nodeset)
+            relations, cotree_to_rel(fitch_cotree_dicograph), len(nodeset)
         )
 
         weights_dicograph = create_weights(nodeset, partial_dicograph, 100)
