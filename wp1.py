@@ -108,10 +108,22 @@ def generate_di_cograph(nodeset):
 
         nodeId += 1
 
-    decoded_dicotree = cotree_to_rel(dicotree)
-    dicograph = rel_to_fitch(decoded_dicotree, nodeset)
+    # reverse the nodes of the dicotree
+    reversed_dicotree = type(dicotree)()
 
-    labels = {node: data["symbol"] for node, data in dicotree.nodes(data=True)}
+    reversed_nodelist = list(reversed(list(dicotree.nodes(data=True))))
+    reversed_dicotree.add_nodes_from(reversed_nodelist)
+
+    reversed_dicotree.add_edges_from(dicotree.edges())
+
+    labels = {node: data["symbol"] for node, data in reversed_dicotree.nodes(data=True)}
+    pos = nx.nx_agraph.graphviz_layout(reversed_dicotree, prog="dot")
+    nx.draw(reversed_dicotree, pos, with_labels=True, labels=labels)
+
+    plt.show()
+
+    decoded_dicotree = cotree_to_rel(reversed_dicotree)
+    dicograph = rel_to_fitch(decoded_dicotree, nodeset)
 
     """"
     for edge in list(dicotree.edges):
@@ -133,13 +145,6 @@ def generate_di_cograph(nodeset):
     print("Empty relations           - ", relations_dicograph[0])
     print("Directed relations        - ", relations_dicograph["d"])
     print("Bidirected relations      - ", relations_dicograph[1])
-
-    # Lea
-    # nx.draw(dicotree, with_labels=True, labels=labels)
-    pos = nx.nx_agraph.graphviz_layout(dicotree, prog="dot")
-    nx.draw(dicotree, pos, with_labels=True, labels=labels)
-
-    plt.show()
 
     return dicograph
 
