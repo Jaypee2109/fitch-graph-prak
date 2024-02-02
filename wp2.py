@@ -87,49 +87,201 @@ def bipartition(graph):
     return [nodeset[:midpoint], nodeset[midpoint:]]
 
 
+def query(root):
+    for node_filename in os.listdir(root):
+        node_filename_path = os.path.join(root, node_filename)
+
+        for configuration_filename in os.listdir(node_filename_path):
+            configuration_filename_path = os.path.join(
+                node_filename_path, configuration_filename
+            )
+
+            for rate_filename in os.listdir(configuration_filename_path):
+                rate_filename_path = os.path.join(
+                    configuration_filename_path, rate_filename
+                )
+
+                configuration = extract_values(configuration_filename)
+                rate = re.search(r"(\d+)$", rate_filename)
+
+                # create xenology graph
+                xenology = generate_xenology(rate_filename_path)
+                xenology_graph = xenology["graph"]
+                xenology_relations = xenology["relations"]
+                xenology_nodes = xenology["graph"].nodes
+
+                # METADATA
+                PFAD = rate_filename_path
+                KNOTENZAHL = len(xenology_nodes)
+                DUPLIKATION = float(configuration[0])
+                VERLUST = float(configuration[1])
+                HGT = float(configuration[2])
+                EVOLUTIONSRATE = int(rate.group(1))
+
+                distributions = {
+                    "existing": (random.uniform, [1.0, 1.5], True),
+                    "non_existing": (random.random, [], True),
+                }
+
+                median_val = random.choice([True, False])
+                reciprocal_val = random.choice([True, False])
+
+                # METADATA
+                DISTRIBUTION_EXISTING = "random.uniform"
+                DISTRIBUTION_NON_EXISTING = "random.random"
+                MEDIAN = median_val
+                RECIPROCAL = reciprocal_val
+
+                weighted_relations = generate_weights_set(
+                    xenology_graph, xenology_relations, distributions
+                )
+
+                # METADATA
+                METHOD = "random"
+
+                fitch_relations_random_sum = partition_heuristic_scaffold(
+                    weighted_relations["d"],
+                    weighted_relations[1],
+                    weighted_relations[0],
+                    list(xenology_nodes),
+                    bipartition,
+                    scoring_function_sum,
+                    median=median_val,
+                    reciprocal=reciprocal_val,
+                )
+
+                sym_diff_random_sum = sym_diff(
+                    xenology_relations, fitch_relations_random_sum, len(xenology_nodes)
+                )
+
+                SCORE = "sum"
+                DIFF = sym_diff_random_sum
+
+                append_variables_to_csv(
+                    "wp2.csv",
+                    PFAD=PFAD,
+                    KNOTENZAHL=KNOTENZAHL,
+                    DUPLIKATION=DUPLIKATION,
+                    VERLUST=VERLUST,
+                    HGT=HGT,
+                    EVOLUTIONSRATE=EVOLUTIONSRATE,
+                    DISTRIBUTION_EXISTING=DISTRIBUTION_EXISTING,
+                    DISTRIBUTION_NON_EXISTING=DISTRIBUTION_NON_EXISTING,
+                    MEDIAN=MEDIAN,
+                    RECIPROCAL=RECIPROCAL,
+                    METHOD=METHOD,
+                    SCORE=SCORE,
+                    DIFF=DIFF,
+                )
+
+                fitch_relations_random_avg = partition_heuristic_scaffold(
+                    weighted_relations["d"],
+                    weighted_relations[1],
+                    weighted_relations[0],
+                    list(xenology_nodes),
+                    bipartition,
+                    scoring_function_average,
+                    median=median_val,
+                    reciprocal=reciprocal_val,
+                )
+
+                sym_diff_random_avg = sym_diff(
+                    xenology_relations, fitch_relations_random_avg, len(xenology_nodes)
+                )
+
+                SCORE = "avg"
+                DIFF = sym_diff_random_avg
+
+                append_variables_to_csv(
+                    "wp2.csv",
+                    PFAD=PFAD,
+                    KNOTENZAHL=KNOTENZAHL,
+                    DUPLIKATION=DUPLIKATION,
+                    VERLUST=VERLUST,
+                    HGT=HGT,
+                    EVOLUTIONSRATE=EVOLUTIONSRATE,
+                    DISTRIBUTION_EXISTING=DISTRIBUTION_EXISTING,
+                    DISTRIBUTION_NON_EXISTING=DISTRIBUTION_NON_EXISTING,
+                    MEDIAN=MEDIAN,
+                    RECIPROCAL=RECIPROCAL,
+                    METHOD=METHOD,
+                    SCORE=SCORE,
+                    DIFF=DIFF,
+                )
+
+                # METADATA
+                METHOD = "louvain"
+
+                fitch_relations_louvain_sum = partition_heuristic_scaffold(
+                    weighted_relations["d"],
+                    weighted_relations[1],
+                    weighted_relations[0],
+                    list(xenology_nodes),
+                    louvain_standard,
+                    scoring_function_sum,
+                    median=median_val,
+                    reciprocal=reciprocal_val,
+                )
+
+                sym_diff_louvain_sum = sym_diff(
+                    xenology_relations, fitch_relations_louvain_sum, len(xenology_nodes)
+                )
+
+                SCORE = "sum"
+                DIFF = sym_diff_louvain_sum
+
+                append_variables_to_csv(
+                    "wp2.csv",
+                    PFAD=PFAD,
+                    KNOTENZAHL=KNOTENZAHL,
+                    DUPLIKATION=DUPLIKATION,
+                    VERLUST=VERLUST,
+                    HGT=HGT,
+                    EVOLUTIONSRATE=EVOLUTIONSRATE,
+                    DISTRIBUTION_EXISTING=DISTRIBUTION_EXISTING,
+                    DISTRIBUTION_NON_EXISTING=DISTRIBUTION_NON_EXISTING,
+                    MEDIAN=MEDIAN,
+                    RECIPROCAL=RECIPROCAL,
+                    METHOD=METHOD,
+                    SCORE=SCORE,
+                    DIFF=DIFF,
+                )
+
+                fitch_relations_louvain_avg = partition_heuristic_scaffold(
+                    weighted_relations["d"],
+                    weighted_relations[1],
+                    weighted_relations[0],
+                    list(xenology_nodes),
+                    louvain_standard,
+                    scoring_function_average,
+                    median=median_val,
+                    reciprocal=reciprocal_val,
+                )
+
+                sym_diff_louvain_avg = sym_diff(
+                    xenology_relations, fitch_relations_louvain_avg, len(xenology_nodes)
+                )
+
+                SCORE = "avg"
+                DIFF = sym_diff_louvain_avg
+
+                append_variables_to_csv(
+                    "wp2.csv",
+                    PFAD=PFAD,
+                    KNOTENZAHL=KNOTENZAHL,
+                    DUPLIKATION=DUPLIKATION,
+                    VERLUST=VERLUST,
+                    HGT=HGT,
+                    EVOLUTIONSRATE=EVOLUTIONSRATE,
+                    DISTRIBUTION_EXISTING=DISTRIBUTION_EXISTING,
+                    DISTRIBUTION_NON_EXISTING=DISTRIBUTION_NON_EXISTING,
+                    MEDIAN=MEDIAN,
+                    RECIPROCAL=RECIPROCAL,
+                    METHOD=METHOD,
+                    SCORE=SCORE,
+                    DIFF=DIFF,
+                )
+
+
 if __name__ == "__main__":
-    # generate fitch graph based on xenology dataset
-    xenology = generate_xenology(
-        "graph-prak-GFH/n10/D0.3_L0.3_H0.9/D0.3_L0.3_H0.9_n10_74"
-    )
-
-    relations = xenology["relations"]
-    graph = xenology["graph"]
-
-    # define distribution parameters for generating weights alternative
-    """
-    distributions = {
-        1: (random.uniform, [1.0, 1.5]),
-        0: (random.random, []),
-        "d": (random.uniform, [1.0, 1.5]),
-    }
-    """
-
-    distributions = {
-        "existing": (random.uniform, [1.0, 1.5], True),
-        "non_existing": (random.random, [], True),
-    }
-
-    weighted_relations = generate_weights_set(graph, relations, distributions)
-
-    fitch_relations_partition = partition_heuristic_scaffold(
-        weighted_relations["d"],
-        weighted_relations[1],
-        weighted_relations[0],
-        list(graph.nodes),
-        bipartition,
-        scoring_function_sum,
-    )
-
-    print(sym_diff(relations, fitch_relations_partition, len(graph)))
-
-    fitch_relations_louvain = partition_heuristic_scaffold(
-        weighted_relations["d"],
-        weighted_relations[1],
-        weighted_relations[0],
-        list(graph.nodes),
-        louvain_standard,
-        scoring_function_average,
-    )
-
-    print(sym_diff(relations, fitch_relations_louvain, len(graph)))
+    query("graph-prak-GFH")
