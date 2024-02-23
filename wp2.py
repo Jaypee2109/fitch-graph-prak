@@ -45,6 +45,18 @@ def scoring_function_sum(left, right, relations):
     return sum
 
 
+def scoring_function_multipy(left, right, relations):
+    product = 0
+
+    for edge in relations:
+        if (edge[0] in left and edge[1] in right) or (
+            edge[1] in left and edge[0] in right
+        ):
+            product *= relations[edge]
+
+    return product
+
+
 def generate_weights_set(graph, relations, distributions):
     nodeset = list(graph)
     weighted_relations = {1: {}, 0: {}, "d": {}}
@@ -145,7 +157,7 @@ def query(root):
                     weighted_relations[0],
                     list(xenology_nodes),
                     bipartition,
-                    scoring_function_sum,
+                    scoring_function_multipy,
                     median=median_val,
                     reciprocal=reciprocal_val,
                 )
@@ -154,7 +166,7 @@ def query(root):
                     xenology_relations, fitch_relations_random_sum, len(xenology_nodes)
                 )
 
-                SCORE = "sum"
+                SCORE = "mul"
                 DIFF = sym_diff_random_sum
 
                 append_variables_to_csv(
@@ -173,6 +185,8 @@ def query(root):
                     SCORE=SCORE,
                     DIFF=DIFF,
                 )
+
+                """
 
                 fitch_relations_random_avg = partition_heuristic_scaffold(
                     weighted_relations["d"],
@@ -209,6 +223,9 @@ def query(root):
                     DIFF=DIFF,
                 )
 
+                
+                """
+
                 # METADATA
                 METHOD = "louvain"
 
@@ -218,7 +235,7 @@ def query(root):
                     weighted_relations[0],
                     list(xenology_nodes),
                     louvain_standard,
-                    scoring_function_sum,
+                    scoring_function_multipy,
                     median=median_val,
                     reciprocal=reciprocal_val,
                 )
@@ -227,7 +244,7 @@ def query(root):
                     xenology_relations, fitch_relations_louvain_sum, len(xenology_nodes)
                 )
 
-                SCORE = "sum"
+                SCORE = "mul"
                 DIFF = sym_diff_louvain_sum
 
                 append_variables_to_csv(
@@ -246,6 +263,8 @@ def query(root):
                     SCORE=SCORE,
                     DIFF=DIFF,
                 )
+
+                """
 
                 fitch_relations_louvain_avg = partition_heuristic_scaffold(
                     weighted_relations["d"],
@@ -281,6 +300,8 @@ def query(root):
                     SCORE=SCORE,
                     DIFF=DIFF,
                 )
+                
+                """
 
 
 if __name__ == "__main__":

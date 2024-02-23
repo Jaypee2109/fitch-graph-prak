@@ -331,7 +331,8 @@ def query(root):
                         len(xenology_nodes),
                     )
                 except:
-                    print("NO FITCH XENOLOGY")
+                    isFitch = False
+                    # print("NO FITCH XENOLOGY")
 
                 PARTIAL_FITCH = isFitch
                 ALGO_ONE_ORDER = order
@@ -428,7 +429,8 @@ def query(root):
                         len(dicograph_nodes),
                     )
                 except:
-                    print("NO FITCH XENOLOGY")
+                    isFitch = False
+                    # print("NO FITCH XENOLOGY")
 
                 PARTIAL_FITCH = isFitch
                 ALGO_ONE_ORDER = order
